@@ -1,8 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
-function App() {
+/*
+  BACKEND CONNECTION
+  ------------------
+  On Render, set:
+  VITE_BACKEND_URL=https://promptcompiler-8bop.onrender.com
 
+  The fallback below also makes the app work even if
+  the environment variable is not set.
+*/
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  'https://promptcompiler-8bop.onrender.com'
+
+function App() {
   // =========================================
   // BASIC STATE
   // =========================================
@@ -21,8 +33,6 @@ function App() {
   const [taskPlan, setTaskPlan] = useState([])
   const [generatedPrompt, setGeneratedPrompt] = useState('')
   const [verification, setVerification] = useState(null)
-    
-  
 
   // =========================================
   // IMPROVE PROMPT STATE
@@ -36,21 +46,23 @@ function App() {
   // =========================================
   // PROMPT HISTORY
   // =========================================
-const [promptHistory, setPromptHistory] = useState(() => {
-  try {
-    const savedHistory =
-      localStorage.getItem('promptCompilerHistory')
 
-    return savedHistory
-      ? JSON.parse(savedHistory)
-      : []
-  } catch (error) {
-    return []
-  }
-})
-  
+  const [promptHistory, setPromptHistory] = useState(() => {
+    try {
+      const savedHistory = localStorage.getItem(
+        'promptCompilerHistory'
+      )
+
+      return savedHistory
+        ? JSON.parse(savedHistory)
+        : []
+    } catch (error) {
+      return []
+    }
+  })
+
   const [showAddStep, setShowAddStep] = useState(false)
-const [newStep, setNewStep] = useState('')
+  const [newStep, setNewStep] = useState('')
 
   // =========================================
   // STARTUP
@@ -66,74 +78,57 @@ const [newStep, setNewStep] = useState('')
   const detailsRef = useRef(null)
   const workflowRef = useRef(null)
 
-  
   // =========================================
   // SAVE HISTORY
   // =========================================
 
   useEffect(() => {
-
     try {
-
       localStorage.setItem(
         'promptCompilerHistory',
         JSON.stringify(promptHistory)
       )
-
     } catch (error) {
-
       console.error(
         'Could not save prompt history:',
         error
       )
-
     }
-
   }, [promptHistory])
-
 
   // =========================================
   // STARTUP ANIMATION
   // =========================================
 
   useEffect(() => {
-
     const timer = setInterval(() => {
-
       setProgress((oldProgress) => {
-
-        const newProgress =
-          Math.min(oldProgress + 2, 100)
+        const newProgress = Math.min(
+          oldProgress + 2,
+          100
+        )
 
         if (newProgress === 100) {
-
           clearInterval(timer)
 
           setTimeout(() => {
             setStarting(false)
           }, 700)
-
         }
 
         return newProgress
-
       })
-
     }, 35)
 
     return () => clearInterval(timer)
-
   }, [])
-
 
   // =========================================
   // SAVE CURRENT PROMPT TO HISTORY
   // =========================================
 
   const saveToHistory = (userPrompt, resultData) => {
-
     const historyItem = {
-
       id: Date.now(),
 
       prompt: userPrompt,
@@ -152,11 +147,9 @@ const [newStep, setNewStep] = useState('')
 
       timestamp:
         new Date().toLocaleString(),
-
     }
 
     setPromptHistory((previousHistory) => {
-
       const filteredHistory =
         previousHistory.filter(
           (item) =>
@@ -166,27 +159,32 @@ const [newStep, setNewStep] = useState('')
 
       return [
         historyItem,
-        ...filteredHistory
+        ...filteredHistory,
       ].slice(0, 20)
-
     })
-
   }
-
 
   // =========================================
   // LOAD HISTORY ITEM
   // =========================================
 
   const loadHistoryItem = (item) => {
-
     setPrompt(item.prompt)
 
     setIntentData({
-      goal: item.goal || 'General task',
-      subject: item.subject || 'General task',
-      duration: 'Not specified',
-      output: 'Structured workflow'
+      goal:
+        item.goal ||
+        'General task',
+
+      subject:
+        item.subject ||
+        'General task',
+
+      duration:
+        'Not specified',
+
+      output:
+        'Structured workflow',
     })
 
     setGeneratedPrompt(
@@ -194,80 +192,62 @@ const [newStep, setNewStep] = useState('')
     )
 
     setTaskPlan([])
-
     setVerification(null)
-
     setImprovedPrompt('')
-
     setCompiled(true)
-
     setError('')
-
     setActiveStep(5)
 
     setTimeout(() => {
-
       detailsRef.current?.scrollIntoView({
         behavior: 'smooth',
-        block: 'start'
+        block: 'start',
       })
-
     }, 200)
-
   }
-
 
   // =========================================
   // DELETE HISTORY ITEM
   // =========================================
 
   const deleteHistoryItem = (id) => {
-
     setPromptHistory((previousHistory) =>
       previousHistory.filter(
         (item) => item.id !== id
       )
     )
-
   }
-
 
   // =========================================
   // CLEAR HISTORY
   // =========================================
 
   const clearHistory = () => {
-
     if (promptHistory.length === 0) {
       return
     }
 
-    const confirmed =
-      window.confirm(
-        'Clear all PromptCompiler history?'
-      )
+    const confirmed = window.confirm(
+      'Clear all PromptCompiler history?'
+    )
 
     if (!confirmed) {
       return
     }
 
     setPromptHistory([])
-
   }
-
 
   // =========================================
   // COPY GENERATED PROMPT
   // =========================================
 
   const copyGeneratedPrompt = async () => {
-
     if (!generatedPrompt) {
       return
     }
 
     try {
-
       await navigator.clipboard.writeText(
         generatedPrompt
       )
@@ -277,9 +257,7 @@ const [newStep, setNewStep] = useState('')
       setTimeout(() => {
         setCopied(false)
       }, 2000)
-
     } catch (error) {
-
       console.error(
         'Copy failed:',
         error
@@ -288,24 +266,19 @@ const [newStep, setNewStep] = useState('')
       setError(
         'Could not copy the generated prompt.'
       )
-
     }
-
   }
-
 
   // =========================================
   // COPY IMPROVED PROMPT
   // =========================================
 
   const copyImprovedPrompt = async () => {
-
     if (!improvedPrompt) {
       return
     }
 
     try {
-
       await navigator.clipboard.writeText(
         improvedPrompt
       )
@@ -315,9 +288,7 @@ const [newStep, setNewStep] = useState('')
       setTimeout(() => {
         setImprovedCopied(false)
       }, 2000)
-
     } catch (error) {
-
       console.error(
         'Copy failed:',
         error
@@ -326,35 +297,30 @@ const [newStep, setNewStep] = useState('')
       setError(
         'Could not copy the improved prompt.'
       )
-
     }
-
   }
-
 
   // =========================================
   // IMPROVE PROMPT
   // =========================================
 
   const improvePrompt = async () => {
-
     if (!prompt.trim()) {
       return
     }
 
     setImproving(true)
-
     setError('')
 
     try {
-
       const response = await fetch(
-        'http://127.0.0.1:8000/improve',
+        `${BACKEND_URL}/improve`,
         {
           method: 'POST',
 
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type':
+              'application/json',
           },
 
           body: JSON.stringify({
@@ -365,7 +331,7 @@ const [newStep, setNewStep] = useState('')
 
       if (!response.ok) {
         throw new Error(
-          'Improvement request failed'
+          `Improvement request failed: ${response.status}`
         )
       }
 
@@ -375,57 +341,97 @@ const [newStep, setNewStep] = useState('')
       setImprovedPrompt(
         data.improved_prompt || ''
       )
-
     } catch (error) {
-
-      console.error(error)
-
-      setError(
-        'Could not improve the prompt.'
+      console.error(
+        'Improve prompt error:',
+        error
       )
 
+      setError(
+        'Could not improve the prompt. Check that the backend is running and CORS is configured.'
+      )
     } finally {
-
       setImproving(false)
-
     }
-
   }
+
+  // =========================================
+  // DOWNLOAD GENERATED PROMPT
+  // =========================================
 
   const downloadGeneratedPrompt = () => {
-  if (!generatedPrompt) {
-    return
+    if (!generatedPrompt) {
+      return
+    }
+
+    const blob = new Blob(
+      [generatedPrompt],
+      {
+        type: 'text/plain',
+      }
+    )
+
+    const url =
+      URL.createObjectURL(blob)
+
+    const link =
+      document.createElement('a')
+
+    link.href = url
+    link.download =
+      'generated-prompt.txt'
+
+    document.body.appendChild(link)
+
+    link.click()
+
+    document.body.removeChild(link)
+
+    URL.revokeObjectURL(url)
   }
 
-  const blob = new Blob(
-    [generatedPrompt],
-    { type: 'text/plain' }
-  )
+  // =========================================
+  // DOWNLOAD IMPROVED PROMPT
+  // =========================================
 
-  const url = URL.createObjectURL(blob)
+  const downloadImprovedPrompt = () => {
+    if (!improvedPrompt) {
+      return
+    }
 
-  const link = document.createElement('a')
+    const blob = new Blob(
+      [improvedPrompt],
+      {
+        type: 'text/plain',
+      }
+    )
 
-  link.href = url
-  link.download = 'generated-prompt.txt'
+    const url =
+      URL.createObjectURL(blob)
 
-  document.body.appendChild(link)
+    const link =
+      document.createElement('a')
 
-  link.click()
+    link.href = url
 
-  document.body.removeChild(link)
+    link.download =
+      'improved-prompt.txt'
 
-  URL.revokeObjectURL(url)
-}
+    document.body.appendChild(link)
+
+    link.click()
+
+    document.body.removeChild(link)
+
+    URL.revokeObjectURL(url)
+  }
 
   // =========================================
   // COMPILE WORKFLOW
   // =========================================
 
   const compileWorkflow = async () => {
-
     if (!prompt.trim()) {
-
       setError(
         'No intent detected. Enter something for the compiler to process.'
       )
@@ -434,32 +440,31 @@ const [newStep, setNewStep] = useState('')
     }
 
     setError('')
-
     setRunning(true)
-
     setCompiled(false)
-
     setActiveStep(1)
 
     setIntentData(null)
-
     setTaskPlan([])
-
     setGeneratedPrompt('')
-
     setVerification(null)
-
     setImprovedPrompt('')
 
     try {
+      /*
+        IMPORTANT:
+        We use BACKEND_URL here instead of
+        127.0.0.1:8000.
+      */
 
       const response = await fetch(
-        'http://127.0.0.1:8000/compile',
+        `${BACKEND_URL}/compile`,
         {
           method: 'POST',
 
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type':
+              'application/json',
           },
 
           body: JSON.stringify({
@@ -470,7 +475,7 @@ const [newStep, setNewStep] = useState('')
 
       if (!response.ok) {
         throw new Error(
-          'Backend request failed'
+          `Backend request failed: ${response.status}`
         )
       }
 
@@ -520,87 +525,73 @@ const [newStep, setNewStep] = useState('')
       setActiveStep(2)
 
       setTimeout(() => {
-
         setActiveStep(3)
-
       }, 800)
 
       setTimeout(() => {
-
         setActiveStep(4)
-
       }, 1600)
 
       setTimeout(() => {
-
         setRunning(false)
-
         setCompiled(true)
-
         setActiveStep(5)
 
         setTimeout(() => {
-
           detailsRef.current?.scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'start',
           })
-
         }, 300)
-
       }, 2400)
 
     } catch (error) {
-
-      console.error(error)
+      console.error(
+        'Compile error:',
+        error
+      )
 
       setRunning(false)
 
       setError(
-        'Could not connect to the PromptCompiler backend.'
+        'Could not connect to the PromptCompiler backend. Check your backend URL and CORS settings.'
       )
-
     }
-
   }
 
+  // =========================================
+  // ADD STEP
+  // =========================================
+
+  const addStep = () => {
+    if (!newStep.trim()) {
+      return
+    }
+
+    setTaskPlan((previousTasks) => [
+      ...previousTasks,
+      newStep.trim(),
+    ])
+
+    setNewStep('')
+    setShowAddStep(false)
+  }
 
   // =========================================
   // RECOMPILE
   // =========================================
-  
-const addStep = () => {
 
-  if (!newStep.trim()) {
-    return
-  }
-
-  setTaskPlan((previousTasks) => [
-    ...previousTasks,
-    newStep.trim()
-  ])
-
-  setNewStep('')
-  setShowAddStep(false)
-
-}
   const recompileWorkflow = () => {
-
     if (!prompt.trim()) {
-
       setError(
         'Enter a prompt before recompiling.'
       )
 
       return
-
     }
 
     compileWorkflow()
-
   }
-  
-
 
   // =========================================
   // RETURN
@@ -608,34 +599,26 @@ const addStep = () => {
 
   return (
     <>
-
       {/* =====================================
           STARTUP SCREEN
       ===================================== */}
 
       {starting && (
-
         <div className="startup-screen">
-
           <div className="startup-glow"></div>
 
           <div className="startup-content">
-
             <div className="startup-logo">
-
               <span>
                 &lt;/&gt;
               </span>
-
             </div>
 
             <h1 className="startup-title">
-
               Prompt
               <span>
                 Compiler
               </span>
-
             </h1>
 
             <p className="startup-subtitle">
@@ -643,11 +626,9 @@ const addStep = () => {
             </p>
 
             <div className="compiler-status">
-
               <div className="startup-status-dot"></div>
 
               <span>
-
                 {progress < 25
                   ? 'Initializing compiler...'
                   : progress < 50
@@ -656,34 +637,25 @@ const addStep = () => {
                   ? 'Analyzing prompt system...'
                   : progress < 100
                   ? 'Compiling interface...'
-                  : 'PromptCompiler ready.'
-                }
-
+                  : 'PromptCompiler ready.'}
               </span>
-
             </div>
 
             <div className="progress-container">
-
               <div
                 className="progress-bar"
                 style={{
-                  width: `${progress}%`
+                  width: `${progress}%`,
                 }}
               ></div>
-
             </div>
 
             <div className="progress-percent">
               {progress}%
             </div>
-
           </div>
-
         </div>
-
       )}
-
 
       {/* =====================================
           MAIN PROMPTCOMPILER
@@ -691,21 +663,17 @@ const addStep = () => {
 
       <div className="compiler">
 
-
         {/* ===================================
             HEADER
         =================================== */}
 
         <header className="topbar">
-
           <div className="brand">
-
             <div className="brand-icon">
               🤖
             </div>
 
             <div>
-
               <h2>
                 PromptCompiler
               </h2>
@@ -713,28 +681,20 @@ const addStep = () => {
               <span>
                 AI Workflow Engine
               </span>
-
             </div>
-
           </div>
 
           <div className="system-status">
-
             <span className="status-dot"></span>
-
             SYSTEM READY
-
           </div>
-
         </header>
-
 
         {/* ===================================
             MAIN WORKSPACE
         =================================== */}
 
         <main className="workspace">
-
 
           {/* =================================
               SIDEBAR
@@ -743,13 +703,11 @@ const addStep = () => {
           <aside className="sidebar">
 
             <div className="panel-title">
-
               <span>
                 01
               </span>
 
               INTENT INPUT
-
             </div>
 
             <h1>
@@ -757,27 +715,21 @@ const addStep = () => {
             </h1>
 
             <p className="description">
-
               Describe what you want AI to accomplish.
               PromptCompiler will transform it into a
               structured workflow.
-
             </p>
 
             <textarea
-
               value={prompt}
-
               onChange={(event) =>
                 setPrompt(event.target.value)
               }
-
               placeholder={`Example:
 
 I have an exam in 5 days.
 Teach me DBMS and create
 practice questions.`}
-
             />
 
             <button
@@ -785,29 +737,22 @@ practice questions.`}
               onClick={compileWorkflow}
               disabled={running}
             >
-
               {running
                 ? '⟳ Compiling...'
-                : '⚡ Compile Workflow'
-              }
-
+                : '⚡ Compile Workflow'}
             </button>
-
 
             {/* =================================
                 ERROR
             ================================= */}
 
             {error && (
-
               <div className="compiler-error">
-
                 <div className="error-icon">
                   !
                 </div>
 
                 <div>
-
                   <strong>
                     COMPILER WARNING
                   </strong>
@@ -815,13 +760,9 @@ practice questions.`}
                   <p>
                     {error}
                   </p>
-
                 </div>
-
               </div>
-
             )}
-
 
             {/* =================================
                 COMPILER LOG
@@ -834,79 +775,59 @@ practice questions.`}
               </div>
 
               <div className="log-line">
-
                 <span className="check">
                   ✓
                 </span>
 
                 Compiler initialized
-
               </div>
 
               <div className="log-line">
-
                 <span className="check">
                   ✓
                 </span>
 
                 Intent parser ready
-
               </div>
 
               <div className="log-line">
-
                 <span className="check">
                   ✓
                 </span>
 
                 Workflow engine ready
-
               </div>
 
               {running && (
-
                 <div className="log-line running">
-
                   <span>
                     ⟳
                   </span>
 
                   Compiling request...
-
                 </div>
-
               )}
 
               {compiled && (
-
                 <>
-
                   <div className="log-line">
-
                     <span className="check">
                       ✓
                     </span>
 
                     Intent detected
-
                   </div>
 
                   <div className="log-line">
-
                     <span className="check">
                       ✓
                     </span>
 
                     Workflow generated
-
                   </div>
-
                 </>
-
               )}
-
             </div>
-
 
             {/* =================================
                 PROMPT HISTORY
@@ -917,31 +838,24 @@ practice questions.`}
               <div className="history-header">
 
                 <div className="history-title">
-
                   <span>
                     02
                   </span>
 
                   PROMPT HISTORY
-
                 </div>
 
                 {promptHistory.length > 0 && (
-
                   <button
                     className="clear-history-button"
                     onClick={clearHistory}
                   >
                     Clear
                   </button>
-
                 )}
-
               </div>
 
-
               {promptHistory.length === 0 ? (
-
                 <div className="history-empty">
 
                   <div className="history-empty-icon">
@@ -954,13 +868,10 @@ practice questions.`}
                   </p>
 
                 </div>
-
               ) : (
-
                 <div className="history-list">
 
                   {promptHistory.map((item) => (
-
                     <div
                       className="history-item"
                       key={item.id}
@@ -976,9 +887,7 @@ practice questions.`}
                       <div className="history-item-content">
 
                         <div className="history-item-prompt">
-
                           {item.prompt}
-
                         </div>
 
                         <div className="history-item-meta">
@@ -995,17 +904,14 @@ practice questions.`}
 
                       </div>
 
-
                       <button
                         className="history-delete"
                         onClick={(event) => {
-
                           event.stopPropagation()
 
                           deleteHistoryItem(
                             item.id
                           )
-
                         }}
                         title="Delete"
                       >
@@ -1013,24 +919,20 @@ practice questions.`}
                       </button>
 
                     </div>
-
                   ))}
 
                 </div>
-
               )}
 
             </div>
 
           </aside>
 
-
           {/* =================================
               RIGHT CANVAS
           ================================= */}
 
           <section className="canvas">
-
 
             {/* =================================
                 CANVAS HEADER
@@ -1039,30 +941,27 @@ practice questions.`}
             <div className="canvas-header">
 
               <div>
-
                 <span className="panel-label">
                   WORKFLOW CANVAS
                 </span>
 
                 <h2>
-
                   {compiled
                     ? 'Compiled workflow'
-                    : 'Waiting for input'
-                  }
-
+                    : 'Waiting for input'}
                 </h2>
-
               </div>
-
 
               <div className="canvas-actions">
 
                 <button
-  onClick={() => setShowAddStep(true)}
->
-  ＋ Add Step
-</button>
+                  onClick={() =>
+                    setShowAddStep(true)
+                  }
+                >
+                  ＋ Add Step
+                </button>
+
                 <button
                   onClick={recompileWorkflow}
                   disabled={
@@ -1074,48 +973,54 @@ practice questions.`}
                 </button>
 
               </div>
-
             </div>
+
+            {/* =================================
+                ADD STEP
+            ================================= */}
+
             {showAddStep && (
-  <div className="add-step-box">
+              <div className="add-step-box">
 
-    <input
-      type="text"
-      value={newStep}
-      onChange={(event) =>
-        setNewStep(event.target.value)
-      }
-      placeholder="Enter a new workflow step..."
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          addStep()
-        }
-      }}
-    />
+                <input
+                  type="text"
+                  value={newStep}
+                  onChange={(event) =>
+                    setNewStep(
+                      event.target.value
+                    )
+                  }
+                  placeholder="Enter a new workflow step..."
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      addStep()
+                    }
+                  }}
+                />
 
-    <button onClick={addStep}>
-      Add
-    </button>
+                <button
+                  onClick={addStep}
+                >
+                  Add
+                </button>
 
-    <button
-      onClick={() => {
-        setShowAddStep(false)
-        setNewStep('')
-      }}
-    >
-      Cancel
-    </button>
+                <button
+                  onClick={() => {
+                    setShowAddStep(false)
+                    setNewStep('')
+                  }}
+                >
+                  Cancel
+                </button>
 
-  </div>
-)}
-
+              </div>
+            )}
 
             {/* =================================
                 INTENT ANALYSIS
             ================================= */}
 
             {intentData && (
-
               <div
                 className="intent-panel"
                 ref={detailsRef}
@@ -1128,7 +1033,6 @@ practice questions.`}
                   </div>
 
                   <div>
-
                     <span>
                       INTENT ANALYSIS
                     </span>
@@ -1136,16 +1040,13 @@ practice questions.`}
                     <h3>
                       What the compiler understood
                     </h3>
-
                   </div>
 
                 </div>
 
-
                 <div className="intent-grid">
 
                   <div className="intent-item">
-
                     <span>
                       GOAL
                     </span>
@@ -1153,12 +1054,9 @@ practice questions.`}
                     <strong>
                       {intentData.goal}
                     </strong>
-
                   </div>
 
-
                   <div className="intent-item">
-
                     <span>
                       SUBJECT
                     </span>
@@ -1166,12 +1064,9 @@ practice questions.`}
                     <strong>
                       {intentData.subject}
                     </strong>
-
                   </div>
 
-
                   <div className="intent-item">
-
                     <span>
                       DURATION
                     </span>
@@ -1179,12 +1074,9 @@ practice questions.`}
                     <strong>
                       {intentData.duration}
                     </strong>
-
                   </div>
 
-
                   <div className="intent-item">
-
                     <span>
                       OUTPUT
                     </span>
@@ -1192,22 +1084,17 @@ practice questions.`}
                     <strong>
                       {intentData.output}
                     </strong>
-
                   </div>
 
                 </div>
-
               </div>
-
             )}
-
 
             {/* =================================
                 TASK PLANNING
             ================================= */}
 
             {taskPlan.length > 0 && (
-
               <div className="task-panel">
 
                 <div className="task-header">
@@ -1217,7 +1104,6 @@ practice questions.`}
                   </div>
 
                   <div>
-
                     <span>
                       TASK PLANNING
                     </span>
@@ -1225,28 +1111,23 @@ practice questions.`}
                     <h3>
                       Execution plan generated
                     </h3>
-
                   </div>
 
                 </div>
-
 
                 <div className="task-list">
 
                   {taskPlan.map(
                     (task, index) => (
-
                       <div
                         className="task-item"
                         key={index}
                       >
 
                         <div className="task-number">
-
                           {String(
                             index + 1
                           ).padStart(2, '0')}
-
                         </div>
 
                         <div className="task-text">
@@ -1254,85 +1135,76 @@ practice questions.`}
                         </div>
 
                       </div>
-
                     )
                   )}
 
                 </div>
-
               </div>
-
             )}
-
 
             {/* =================================
                 GENERATED PROMPT
             ================================= */}
 
             {generatedPrompt && (
+              <div className="generated-prompt-panel">
 
-  <div className="generated-prompt-panel">
+                <div className="generated-prompt-header">
 
-    <div className="generated-prompt-header">
+                  <div className="generated-prompt-icon">
+                    ⚡
+                  </div>
 
-      <div className="generated-prompt-icon">
-        ⚡
-      </div>
+                  <div>
+                    <span>
+                      GENERATED PROMPT
+                    </span>
 
-      <div>
+                    <h3>
+                      Optimized prompt produced by the compiler
+                    </h3>
+                  </div>
 
-        <span>
-          GENERATED PROMPT
-        </span>
+                </div>
 
-        <h3>
-          Optimized prompt produced by the compiler
-        </h3>
+                <div className="generated-prompt-content">
 
-      </div>
+                  <div className="generated-prompt-actions">
 
-    </div>
+                    <button
+                      onClick={
+                        copyGeneratedPrompt
+                      }
+                    >
+                      {copied
+                        ? '✓ Copied'
+                        : '⧉ Copy Prompt'}
+                    </button>
 
+                    <button
+                      className="download-prompt-button"
+                      onClick={
+                        downloadGeneratedPrompt
+                      }
+                    >
+                      ↓ Download Prompt
+                    </button>
 
-    <div className="generated-prompt-content">
+                  </div>
 
-      <div className="generated-prompt-actions">
+                  <pre>
+                    {generatedPrompt}
+                  </pre>
 
-        <button
-          onClick={copyGeneratedPrompt}
-        >
-          {copied
-            ? '✓ Copied'
-            : '⧉ Copy Prompt'
-          }
-        </button>
+                </div>
+              </div>
+            )}
 
-
-        <button
-          className="download-prompt-button"
-          onClick={downloadGeneratedPrompt}
-        >
-          ↓ Download Prompt
-        </button>
-
-      </div>
-
-
-      <pre>
-        {generatedPrompt}
-      </pre>
-
-    </div>
-
-  </div>
-
-)}
             {/* =================================
                 QUALITY ANALYSIS
             ================================= */}
 
             {verification && (
-
               <div className="quality-panel">
 
                 <div className="quality-header">
@@ -1342,7 +1214,6 @@ practice questions.`}
                   </div>
 
                   <div>
-
                     <span>
                       PROMPT QUALITY
                     </span>
@@ -1350,64 +1221,50 @@ practice questions.`}
                     <h3>
                       Quality analysis
                     </h3>
-
                   </div>
 
                 </div>
 
-
                 <div className="quality-score-row">
 
                   <div>
-
                     <div className="quality-label">
                       QUALITY SCORE
                     </div>
 
                     <div className="quality-score">
-
                       {verification.score || 0}
 
                       <span>
                         /100
                       </span>
-
                     </div>
-
                   </div>
 
-
                   <div
-                    className={
-                      `quality-badge ${
-                        (verification.score || 0) >= 90
-                          ? 'excellent'
-                          : (verification.score || 0) >= 75
-                          ? 'good'
-                          : (verification.score || 0) >= 50
-                          ? 'improve'
-                          : 'weak'
-                      }`
-                    }
+                    className={`quality-badge ${
+                      (verification.score || 0) >= 90
+                        ? 'excellent'
+                        : (verification.score || 0) >= 75
+                        ? 'good'
+                        : (verification.score || 0) >= 50
+                        ? 'improve'
+                        : 'weak'
+                    }`}
                   >
-
                     {(verification.score || 0) >= 90
                       ? 'Excellent'
                       : (verification.score || 0) >= 75
                       ? 'Good'
                       : (verification.score || 0) >= 50
                       ? 'Needs Improvement'
-                      : 'Weak'
-                    }
-
+                      : 'Weak'}
                   </div>
 
                 </div>
 
-
                 {verification.checks &&
                   verification.checks.length > 0 && (
-
                     <div className="quality-section">
 
                       <div className="quality-section-title">
@@ -1418,58 +1275,47 @@ practice questions.`}
 
                         {verification.checks.map(
                           (check, index) => (
-
                             <div
                               className="quality-check"
                               key={index}
                             >
-
                               <span>
                                 ✓
                               </span>
 
                               {check}
-
                             </div>
-
                           )
                         )}
 
                       </div>
-
                     </div>
-
                   )}
-
 
                 <div className="improve-prompt-action">
 
                   <button
                     className="improve-prompt-button"
-                    onClick={improvePrompt}
+                    onClick={
+                      improvePrompt
+                    }
                     disabled={improving}
                   >
-
                     {improving
                       ? '⟳ Improving...'
-                      : '✨ Improve Prompt'
-                    }
-
+                      : '✨ Improve Prompt'}
                   </button>
 
                 </div>
 
               </div>
-
             )}
-
 
             {/* =================================
                 IMPROVED PROMPT
             ================================= */}
 
             {improvedPrompt && (
-
               <div className="improved-prompt-panel">
 
                 <div className="improved-prompt-header">
@@ -1479,7 +1325,6 @@ practice questions.`}
                   </div>
 
                   <div>
-
                     <span>
                       IMPROVED PROMPT
                     </span>
@@ -1487,11 +1332,9 @@ practice questions.`}
                     <h3>
                       Enhanced version of your prompt
                     </h3>
-
                   </div>
 
                 </div>
-
 
                 <div className="improved-prompt-content">
 
@@ -1502,64 +1345,35 @@ practice questions.`}
                         copyImprovedPrompt
                       }
                     >
-
                       {improvedCopied
                         ? '✓ Copied'
-                        : '⧉ Copy Improved Prompt'
-                      }
-
+                        : '⧉ Copy Improved Prompt'}
                     </button>
+
                     <button
-  className="download-prompt-button"
-  onClick={() => {
-    if (!improvedPrompt) {
-      return
-    }
-
-    const blob = new Blob(
-      [improvedPrompt],
-      { type: 'text/plain' }
-    )
-
-    const url = URL.createObjectURL(blob)
-
-    const link = document.createElement('a')
-
-    link.href = url
-    link.download = 'improved-prompt.txt'
-
-    document.body.appendChild(link)
-
-    link.click()
-
-    document.body.removeChild(link)
-
-    URL.revokeObjectURL(url)
-  }}
->
-  ↓ Download Prompt
-</button>
+                      className="download-prompt-button"
+                      onClick={
+                        downloadImprovedPrompt
+                      }
+                    >
+                      ↓ Download Prompt
+                    </button>
 
                   </div>
-
 
                   <pre>
                     {improvedPrompt}
                   </pre>
 
                 </div>
-
               </div>
-
             )}
-
 
             {/* =================================
                 VERIFICATION
             ================================= */}
 
             {verification && (
-
               <div className="verification-panel">
 
                 <div className="verification-header">
@@ -1569,7 +1383,6 @@ practice questions.`}
                   </div>
 
                   <div>
-
                     <span>
                       VERIFICATION
                     </span>
@@ -1577,11 +1390,9 @@ practice questions.`}
                     <h3>
                       Prompt Quality Check
                     </h3>
-
                   </div>
 
                 </div>
-
 
                 <div className="verification-score">
 
@@ -1601,13 +1412,11 @@ practice questions.`}
 
                 </div>
 
-
                 <div className="verification-checks">
 
                   {verification.checks &&
                     verification.checks.map(
                       (check, index) => (
-
                         <div
                           className="verification-check"
                           key={index}
@@ -1620,16 +1429,13 @@ practice questions.`}
                           {check}
 
                         </div>
-
                       )
                     )}
 
                 </div>
 
               </div>
-
             )}
-
 
             {/* =================================
                 WORKFLOW
@@ -1639,7 +1445,6 @@ practice questions.`}
               className="workflow-area"
               ref={workflowRef}
             >
-
 
               {/* STEP 01 */}
 
@@ -1666,14 +1471,11 @@ practice questions.`}
                           : 'node-status'
                       }
                     >
-
                       {activeStep === 1
                         ? 'ANALYZING...'
                         : activeStep > 1
                         ? 'COMPLETE'
-                        : 'READY'
-                      }
-
+                        : 'READY'}
                     </span>
 
                   </div>
@@ -1688,14 +1490,11 @@ practice questions.`}
                   </p>
 
                 </div>
-
               </div>
-
 
               <div className="connector">
                 ↓
               </div>
-
 
               {/* STEP 02 */}
 
@@ -1722,14 +1521,11 @@ practice questions.`}
                           : 'node-status'
                       }
                     >
-
                       {activeStep === 2
                         ? 'PLANNING...'
                         : activeStep > 2
                         ? 'COMPLETE'
-                        : 'READY'
-                      }
-
+                        : 'READY'}
                     </span>
 
                   </div>
@@ -1744,14 +1540,11 @@ practice questions.`}
                   </p>
 
                 </div>
-
               </div>
-
 
               <div className="connector">
                 ↓
               </div>
-
 
               {/* STEP 03 */}
 
@@ -1778,14 +1571,11 @@ practice questions.`}
                           : 'node-status'
                       }
                     >
-
                       {activeStep === 3
                         ? 'GENERATING...'
                         : activeStep > 3
                         ? 'COMPLETE'
-                        : 'READY'
-                      }
-
+                        : 'READY'}
                     </span>
 
                   </div>
@@ -1800,14 +1590,11 @@ practice questions.`}
                   </p>
 
                 </div>
-
               </div>
-
 
               <div className="connector">
                 ↓
               </div>
-
 
               {/* STEP 04 */}
 
@@ -1834,14 +1621,11 @@ practice questions.`}
                           : 'node-status'
                       }
                     >
-
                       {activeStep === 4
                         ? 'VERIFYING...'
                         : activeStep >= 5
                         ? 'VERIFIED'
-                        : 'WAITING'
-                      }
-
+                        : 'WAITING'}
                     </span>
 
                   </div>
@@ -1856,18 +1640,15 @@ practice questions.`}
                   </p>
 
                 </div>
-
               </div>
 
             </div>
-
 
             {/* =================================
                 RESULT
             ================================= */}
 
             {compiled && (
-
               <div className="result-panel">
 
                 <div className="result-header">
@@ -1890,7 +1671,6 @@ practice questions.`}
 
                 </div>
 
-
                 <div className="result-content">
 
                   <div className="result-item">
@@ -1906,7 +1686,6 @@ practice questions.`}
 
                   </div>
 
-
                   <div className="result-item">
 
                     <span>
@@ -1918,7 +1697,6 @@ practice questions.`}
                     </strong>
 
                   </div>
-
 
                   <div className="result-item">
 
@@ -1934,19 +1712,14 @@ practice questions.`}
                   </div>
 
                 </div>
-
               </div>
-
             )}
 
           </section>
-
         </main>
-
       </div>
-
     </>
   )
 }
 
-export default App  
+export default App
